@@ -12,7 +12,7 @@ span {
 }
 .treasureStyle {
   position: absolute;
-  z-index: 2;
+  z-index: 21;
   top: 0px;
   left: 0px;
   visibility: hidden;
@@ -34,7 +34,7 @@ span {
   box-shadow: 0 5px 50px #333;
 }
 #btnStartStop {
-  margin: 0px auto auto 10px;
+  margin: 0px auto 5px 0px;
 }
 .float-child2 {
   width: 20%;
@@ -52,6 +52,7 @@ span {
   color: black;
   position: relative;
   overflow: hidden;
+  width: 70%;
 }
 
 #gameCanvas {

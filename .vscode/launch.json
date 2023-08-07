@@ -8,7 +8,7 @@
       "type": "chrome",
       "request": "launch",
       "name": "Find treasure",
-      "file": "${workspaceFolder}/src/canvasExperiments.html"
+      "file": "${workspaceFolder}/src/FindTreasure.html"
     }
   ]
 }

@@ -15,7 +15,7 @@
           id="img1"
           class="img"
           style="width: 100%; height: 100%"
-          src="../Images/treasuremap.png"
+          src="../Images/treasuremap1.png"
         />
         <img
           id="treasureImg"
@@ -23,7 +23,6 @@
           src="../Images/treasure2.png"
           class="treasureStyle"
         />
-
         <!-- "https://natureconservancy-h.assetsadobe.com/is/image/content/dam/tnc/nature/en/photos/Zugpsitze_mountain.jpg" -->
 
         <canvas id="gameCanvas"> </canvas>
@@ -33,6 +32,9 @@
           <button id="btnStartStop" class="btn" onclick="onStartGame()">
             Start
           </button>
+          <!-- <button id="btnChangeMap" class="btn" onclick="onChangeMap()">
+            Change Map
+          </button> -->
           <p>Games played: <span id="gamesCount">0</span></p>
           <table id="results">
             <tr>
@@ -64,256 +66,14 @@
         </divScore>
       </div>
     </div>
-    <script src="bubble.js" type="text/javascript"></script>
     <script type="text/javascript">
-      var gamesCount = 0;
-      var totalScore = 0;
-      var totalClicks = 0;
-      var gameScore = 0;
-      var gameClicks = 0;
-      var timeOfLastGameInSec = 0;
-      var bestScore = 0;
-      var bestClicks = 0;
-
-      var gameIsStarted = false;
-      var cliWidthlast;
-      var cliHeight = 0;
-      var imgMap = document.getElementById("img1");
-      var imgTreasure = document.getElementById("treasureImg");
-      var canvas = document.getElementById("gameCanvas");
-      var ctx = canvas.getContext("2d");
-
-      // image info is specified in terms of % of image size
-      var mapImageInfo = { x: 0, y: 0, width: 0, height: 0 };
-      var target = { x: 0, y: 0 };
-      var steps = 0;
-
-      window.addEventListener("resize", afterResize);
-      canvas.addEventListener("mousedown", mouseDown);
-      window.addEventListener("keydown", onKeyDown);
-      afterResize(null);
-
-      var x = canvas.clientWidth / 2;
-      var y = canvas.clientHeight / 2;
-
-      var bubble = new Bubble(ctx, null);
-      bubble.showFound(x - 10, y + 10, "Hi from Found");
-      //bubble.draw(x, y, "Hi, Start the game<br>And try to find treasure!");
-
-      function getDistanceInPercents(offsetX, offsetY) {
-        var diffX = offsetX - target.x;
-        var diffY = offsetY - target.y;
-        return Math.sqrt(diffX * diffX + diffY * diffY);
-      }
-
-      function getDistanceHint(distance) {
-        if (distance < 1) {
-          return "";
-        }
-        if (distance < 2.33) {
-          return "Boiling hot! (Очень горячо!)";
-        } else if (distance < 4.7) {
-          return "Really hot! ( Совсем горячо!)";
-        } else if (distance < 9.3) {
-          return "Hot! (Горячо!)";
-        } else if (distance < 18.6) {
-          return "Warm! (Тепло!)";
-        } else if (distance < 37) {
-          return "Cold! (Холодно!)";
-        } else if (distance < 70) {
-          return "Really cold! (Совсем холодно!)";
-        } else {
-          return "Freezing! (Леденящий холод!)";
-        }
-      }
-
-      function mouseDown(event) {
-        if (!gameIsStarted) {
-          return;
-        }
-        steps++;
-
-        const mapRect = getRectImg(imgMap);
-        const tresureRect = getRectImg(imgTreasure);
-        var xOfImg = event.clientX - mapRect.left;
-        var yOfImg = event.clientY - mapRect.top;
-        var xClick = (100 * xOfImg) / mapRect.width;
-        var yClick = (100 * yOfImg) / mapRect.height;
-
-        const distance = getDistanceInPercents(xClick, yClick);
-        //console.log("mouseDn x,y", event.clientX, event.clientY);
-        const txt = getDistanceHint(distance);
-        if (txt === "") {
-          showFound(xOfImg, yOfImg);
-          stopGame();
-          return;
-        }
-        showHint(txt, xOfImg, yOfImg);
-      }
-
-      function showHint(txt, x, y) {
-        xOfBubble = x;
-        yOfBubble = y;
-        bubble.draw(x, y, txt);
-      }
-
-      var time0 = 0;
-      function startStopWatch() {
-        const d = new Date(); // used for debug
-        time0 = d.getTime();
-      }
-      function elepsedTime() {
-        const d = new Date();
-        return d.getTime() - time0;
-      }
-
-      function showFound(x, y) {
-        setTreasurePosition(target, true);
-        bubble.showFound(
-          x,
-          y,
-          "Congratulations, you have found it, in " + steps + " steps!"
-        );
-        updateStatistics();
-      }
-
-      function afterResize(event) {
-        cliWidth = document.documentElement.clientWidth;
-        cliHeight = document.documentElement.clientHeight;
-        var rect = imgMap.getBoundingClientRect();
-
-        canvas = document.getElementById("gameCanvas");
-        const rectImg = getRectImg(imgMap);
-        canvas.style.position = "absolute";
-        canvas.style.top = rectImg.top + "px";
-        canvas.style.left = rectImg.left + "px";
-        canvas.style.width = rectImg.right - rectImg.left + "px";
-        canvas.style.height = rectImg.bottom - rectImg.top + "px";
-        canvas.width = rectImg.right - rectImg.left;
-        canvas.height = rectImg.bottom - rectImg.top;
-
-        ctx.font = "15px Helvetica";
-        if (isTreasureVisible()) {
-          setTreasurePosition(target, true);
-        }
-      }
-
-      function getRectImg(img) {
-        var rect = img.getBoundingClientRect();
-        return rect;
-      }
-      function getSizesOfTreasure() {
-        return imgTreasure.getBoundingClientRect();
-      }
-
-      function onStartGame() {
-        if (gameIsStarted) {
-          stopGame();
-          bubble.clear();
-          return;
-        }
-        restartGame();
-      }
-      function stopGame() {
-        gameIsStarted = false;
-        const btn = document.getElementById("btnStartStop");
-        btn.innerHTML = "Start";
-      }
-      var getRandomNumber = function (size) {
-        return Math.floor(Math.random() * size);
-      };
-
-      function restartGame() {
-        bubble.clear();
-        initStatistics();
-        gameIsStarted = true;
-        const btn = document.getElementById("btnStartStop");
-        btn.innerHTML = "Stop";
-        target.x = getRandomNumber(100);
-        target.y = getRandomNumber(100);
-        setTreasurePosition(target, false);
-      }
-      function setTreasurePosition(target, isVisible) {
-        var rect = getRectImg(imgMap);
-        var xDelta = imgTreasure.width / 2;
-        var yDelta = imgTreasure.height / 2;
-
-        var xAbs = rect.left + 0.01 * target.x * rect.width - xDelta;
-        var yAbs = rect.top + 0.01 * target.y * rect.height - yDelta;
-        imgTreasure.style.position = "absolute";
-        imgTreasure.style.top = yAbs + "px";
-        imgTreasure.style.left = xAbs + "px";
-        imgTreasure.style.visibility = isVisible ? "visible" : "hidden";
-      }
-      function isTreasureVisible() {
-        return imgTreasure.style.visibility === "visible";
-      }
-      function initStatistics() {
-        steps = 0;
-        gameClicks = 0;
-        startStopWatch();
-      }
-      function updateStatistics() {
-        gamesCount++;
-        gameClicks = steps;
-        totalClicks += steps;
-        timeOfLastGameInSec = Math.floor(elepsedTime() / 1000);
-        const avgTime = timeOfLastGameInSec / steps;
-        gameScore = calcScore(avgTime);
-        totalScore += gameScore;
-        if (gameScore > bestScore) {
-          bestScore = gameScore;
-          bestClicks = gameClicks;
-        }
-        var avgScore = Math.round(totalScore / gamesCount);
-        var avgClicks = Math.round(totalClicks / gamesCount);
-
-        document.getElementById("gamesCount").innerHTML = "" + gamesCount;
-        document.getElementById("totScore").innerHTML = "" + totalScore;
-        document.getElementById("totClicks").innerHTML = "" + totalClicks;
-        document.getElementById("gameScore").innerHTML = "" + gameScore;
-        document.getElementById("gameClicks").innerHTML = "" + gameClicks;
-        document.getElementById("bestScore").innerHTML = "" + bestScore;
-        document.getElementById("bestClicks").innerHTML = "" + bestClicks;
-        document.getElementById("avgScore").innerHTML = "" + avgScore;
-        document.getElementById("avgClicks").innerHTML = "" + avgClicks;
-      }
-      function calcScore(avgTime) {
-        let scoreForTimeInPerCents = 0;
-        if (avgTime < 1) {
-          scoreForTimeInPerCents = 0.5;
-        } else if (avgTime < 2) {
-          scoreForTimeInPerCents = 0.3;
-        } else if (avgTime < 3) {
-          scoreForTimeInPerCents = 0.1;
-        } else if (avgTime < 5) {
-          scoreForTimeInPerCents = 0.05;
-        }
-        gameScore = Math.floor((100 + scoreForTimeInPerCents * 100) / steps);
-        return gameScore;
-      }
-
-      var sTimeStamp = 0;
-      var nOfS = 0;
-      function onKeyDown(event) {
-        const isTimeOut =
-          sTimeStamp != 0 && event.timeStamp - sTimeStamp > 1000;
-        if (event.key != "s" || isTimeOut) {
-          nOfS = 0;
-          sTimeStamp = 0;
-          return;
-        }
-
-        nOfS++;
-        if (nOfS == 1) {
-          sTimeStamp = event.timeStamp;
-        } else if (nOfS == 3) {
-          const isVisibleNow = isTreasureVisible();
-          setTreasurePosition(target, !isVisibleNow);
-          sTimeStamp = 0;
-          nOfS = 0;
-        }
-      }
+      // calculation of the score on clicks
+      // for (let i = 1; i <= 30; i++) {
+      //   console.log(i, 5000 / (i * i + 50));
+      // }
     </script>
+    <script src="bubble.js" type="text/javascript"></script>
+    <script src="hint.js" type="text/javascript"></script>
+    <script src="FindTreasure.js" type="text/javascript"></script>
   </body>
 </html>
